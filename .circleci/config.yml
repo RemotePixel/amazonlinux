@@ -79,6 +79,11 @@ common: &common
             WITH_BINARIES=1 build-layer "full"
             test-layer
           done
+    - run:
+        name: install cmd
+        command: |
+          sudo apt-get install jq
+          pip install awscli
 
     - run:
         name: Push Images
