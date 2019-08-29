@@ -26,6 +26,30 @@ The aim of this repo is to construct docker image to use when creating AWS Lambd
 - rasterio: GDAL Libs, python with numpy and cython and rasterio
 - full: GDAL Libs, python with gdal, rasterio, fiona, shapely
 
+## Lambda Layers
+
+#### Arns
+
+//To Do
+
+#### Regions
+- ap-northeast-1
+- ap-northeast-2
+- ap-south-1 
+- ap-southeast-1
+- ap-southeast-2
+- ca-central-1
+- eu-central-1
+- eu-north-1
+- eu-west-1
+- eu-west-2
+- eu-west-3
+- sa-east-1
+- us-east-1
+- us-east-2
+- us-west-1
+- us-west-2
+
 ### Available Drivers (shipped with GDAL)
 - Proj4
 - GEOS
@@ -230,7 +254,7 @@ docker stop lambda
 docker rm lambda
 ```
 
-## 2. Use Lambda Layer ([/examples/layer](/examples/package))
+## 2. Use Lambda Layer ([/examples/layer](/examples/layer))
 
 - dockerfile
 Here we install mercantile and we add our handler method. 
