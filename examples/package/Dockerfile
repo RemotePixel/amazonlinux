@@ -1,7 +1,8 @@
-FROM remotepixel/amazonlinux:gdal3.0-py3.7
+# Here we create a package (like previously with amazonlambda-gdal)
+# we use the "-build" image because we don't want need pre-installed libaries
+FROM remotepixel/amazonlinux:gdal3.0-py3.7-build
 
-# Create a package
-# The package will always have rasterio shapely numpy
-# PREFIX is set to be /opt
-COPY handler.py $PREFIX/python/handler.py
-RUN pip install mercantile
+ENV PACKAGE_PREFIX=/var/task
+
+COPY handler.py ${PACKAGE_PREFIX}/handler.py
+RUN pip install numpy rasterio mercantile --no-binary :all: -t ${PACKAGE_PREFIX}/
