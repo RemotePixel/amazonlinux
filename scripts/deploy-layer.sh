@@ -38,24 +38,24 @@ for AWS_REGION in "${AWS_REGIONS[@]}"; do
     else
         AWS_LAYER=$(aws lambda get-layer-version --version-number ${AWS_LAYER_VERSION} --layer-name $LAYER_NAME --region $AWS_REGION)
         AWS_LAYER_DESC=$(jq -r '.Description' <<< "${GET_LAYER}")
+		AWS_LAYER_SHA=$(echo "${GET_LAYER_DESC}" | cut -d "|" -f 2)
         # increment version
         let "AWS_LAYER_VERSION++"
     fi
 
-
-    if [[ $REQTXT_SHA256 != $LAYER_REQTXT_SHA256 ]];
+    if [[ $LAYER_HASH != $AWS_LAYER_SHA ]];
     then
         aws lambda publish-layer-version \
         --region $AWS_REGION \
         --layer-name $LNAME \
         --zip-file fileb://$LZIP_NAME \
-        --description "${LAYER_DESC} | ${LAYER_HASH}" \
+        --description "${LAYER_DESC} |${LAYER_HASH}" \
         --compatible-runtimes ${LAYER_RUNTIME} \
         --license-info MIT
 
         aws lambda add-layer-version-permission \
-            --region $AWS_REGION \
-            --layer-name $LNAME \
+            --region ${AWS_REGION} \
+            --layer-name ${LNAME} \
             --statement-id make_public \
             --version-number ${AWS_LAYER_VERSION} \
             --principal '*' \

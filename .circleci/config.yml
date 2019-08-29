@@ -99,14 +99,14 @@ common: &common
             push-image "full"
           done
 
-    # - run:
-    #     name: Deploy Layer
-    #     command: |
-    #       for PYTHON_VERSION in ${PYTHON_VERSIONS}; do
-    #         .scripts/deploy-layer.sh "build"
-    #         .scripts/deploy-layer.sh "rasterio"
-    #         .scripts/deploy-layer.sh "full"
-    #       done
+    - run:
+        name: Deploy Layer
+        command: |
+          for PYTHON_VERSION in ${PYTHON_VERSIONS}; do
+            ./scripts/deploy-layer.sh "build"
+            ./scripts/deploy-layer.sh "rasterio"
+            ./scripts/deploy-layer.sh "full"
+          done
 
 jobs:
   "gdal-3.0":
