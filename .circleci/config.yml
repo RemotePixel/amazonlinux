@@ -2,11 +2,11 @@ version: 2
 common: &common
   machine:
     docker_layer_caching: true 
-  working_directory: ~/amazonlinux-gdal
+  working_directory: ~/amazonlinux
   steps:
     - checkout
     - attach_workspace:
-        at: ~/amazonlinux-gdal
+        at: ~/amazonlinux
     - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
     - run:
         name: create amazonlinux:gdal image
@@ -112,15 +112,15 @@ jobs:
       - GDAL_VERSION=3.0
       - PYTHON_VERSIONS=3.6 3.7
 
-  # "gdal-2.4":
-  #   <<: *common
-  #   environment:
-  #     - GDAL_VERSION=2.4
-  #     - PYTHON_VERSION="3.6 3.7"
+  "gdal-2.4":
+    <<: *common
+    environment:
+      - GDAL_VERSION=2.4
+      - PYTHON_VERSION=3.6 3.7
 
 workflows:
   version: 2
   build_and_push:
     jobs:
       - "gdal-3.0"
-      # - "gdal-2.4"
+      - "gdal-2.4"
