@@ -71,39 +71,35 @@ common: &common
             if [[ "$driver" =~ "GTiff" ]]; then echo "PASSED"; else exit 1; fi 
           }
 
-          for PYTHON_VERSION in ${PYTHON_VERSIONS}; do
-            build-layer "build"
-            build-layer "rasterio"
-            WITH_BINARIES=1 build-layer "full"
-            test-layer
-          done
-    - run:
-        name: install cmd
-        command: |
-          sudo apt-get install jq
-          pip install awscli
-    - run:
-        name: Push Images
-        command: |
           push-image () {
               LAYER_NAME=$1
               docker push remotepixel/amazonlinux:gdal${GDAL_VERSION}-py${PYTHON_VERSION}-${LAYER_NAME} .
           }
 
           for PYTHON_VERSION in ${PYTHON_VERSIONS}; do
+            build-layer "build"
+            build-layer "rasterio"
+            WITH_BINARIES=1 build-layer "full"
+            test-layer
             push-image "build"
             push-image "rasterio"
             push-image "full"
           done
 
-    - run:
-        name: Deploy Layer
-        command: |
-          for PYTHON_VERSION in ${PYTHON_VERSIONS}; do
-            ./scripts/deploy-layer.sh "build"
-            ./scripts/deploy-layer.sh "rasterio"
-            ./scripts/deploy-layer.sh "full"
-          done
+    # - run:
+    #     name: install cmd
+    #     command: |
+    #       sudo apt-get install jq
+    #       pip install awscli
+
+    # - run:
+    #     name: Deploy Layer
+    #     command: |
+    #       for PYTHON_VERSION in ${PYTHON_VERSIONS}; do
+    #         ./scripts/deploy-layer.sh "build"
+    #         ./scripts/deploy-layer.sh "rasterio"
+    #         ./scripts/deploy-layer.sh "full"
+    #       done
 
 jobs:
   "gdal-3.0":
@@ -116,7 +112,7 @@ jobs:
     <<: *common
     environment:
       - GDAL_VERSION=2.4
-      - PYTHON_VERSION=3.6 3.7
+      - PYTHON_VERSIONS=3.6 3.7
 
 workflows:
   version: 2
