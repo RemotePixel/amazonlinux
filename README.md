@@ -314,7 +314,7 @@ A couple environment variables are set when creating the images:
 
 
 ## Package architecture and AWS Lambda config
-:warning: AWS Lambda will need `GDAL_DATA` to be set to `/var/task/share/gdal` or `/opt/share/gdal` (when using layer) to be able to work :warning:
+:warning: AWS Lambda will need `GDAL_DATA` to be set to `/var/task/share/gdal` to be able to work :warning:
 
 ```
 package.zip
