@@ -73,7 +73,7 @@ common: &common
 
           push-image () {
               LAYER_NAME=$1
-              docker push remotepixel/amazonlinux:gdal${GDAL_VERSION}-py${PYTHON_VERSION}-${LAYER_NAME} .
+              docker push remotepixel/amazonlinux:gdal${GDAL_VERSION}-py${PYTHON_VERSION}-${LAYER_NAME}
           }
 
           for PYTHON_VERSION in ${PYTHON_VERSIONS}; do
