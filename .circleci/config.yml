@@ -87,9 +87,9 @@ common: &common
           done
 
     - persist_to_workspace:
-      root: ~/amazonlinux
-      paths:
-        - layer-gdal*.zip
+        root: .
+        paths:
+          - layer-gdal*.zip
 
 jobs:
   "gdal-3.0":
