@@ -105,10 +105,11 @@ jobs:
       - PYTHON_VERSIONS=3.6 3.7
 
   "deploy":
-    - image: circleci/python:3.7.2
-    environment:
-      - GDAL_VERSION=2.4 3.0
-      - PYTHON_VERSIONS=3.6 3.7
+    docker:
+      - image: circleci/python:3.7.2
+        environment:
+          - GDAL_VERSION=2.4 3.0
+          - PYTHON_VERSIONS=3.6 3.7
     working_directory: ~/amazonlinux
     steps:
       - checkout
@@ -140,10 +141,10 @@ workflows:
     jobs:
       - "gdal-3.0"
       - "gdal-2.4"
-      - deploy:
-        requires:
-          - "gdal-3.0"
-          - "gdal-2.4"
-        # filters:
-        #   branches:
-        #     only: master
+      - deploy
+        # requires:
+        #   - "gdal-3.0"
+        #   - "gdal-2.4"
+        # # filters:
+        # #   branches:
+        # #     only: master
