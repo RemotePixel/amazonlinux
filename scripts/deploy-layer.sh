@@ -22,9 +22,10 @@ AWS_REGIONS=(
 LAYER_RUNTIME=python${PYTHON_VERSION}
 LAYER_PREFIX=amazonlinux-gdal${GDAL_VERSION}-py
 LNAME=${LAYER_PREFIX}${PYTHON_VERSION}-${LAYER_NAME}
-LZIP_NAME=${LNAME}.zip
 LAYER_DESC="Lambda Layer with GDAL${GDAL_VERSION} - ${LAYER_RUNTIME}"
-LAYER_HASH = $(sha256 ${LZIP_NAME})
+
+LOCAL_LNAME=layer-gdal${GDAL_VERSION}-py${PYTHON_VERSION}-${LAYER_NAME}.zip
+LAYER_HASH=$(sha256sum ${LOCAL_LNAME})
 
 for AWS_REGION in "${AWS_REGIONS[@]}"; do
     # Get hash of latest version
@@ -48,7 +49,7 @@ for AWS_REGION in "${AWS_REGIONS[@]}"; do
         aws lambda publish-layer-version \
         --region $AWS_REGION \
         --layer-name $LNAME \
-        --zip-file fileb://$LZIP_NAME \
+        --zip-file fileb://$LOCAL_LNAME \
         --description "${LAYER_DESC} |${LAYER_HASH}" \
         --compatible-runtimes ${LAYER_RUNTIME} \
         --license-info MIT

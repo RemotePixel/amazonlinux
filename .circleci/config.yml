@@ -86,20 +86,10 @@ common: &common
             push-image "full"
           done
 
-    # - run:
-    #     name: install cmd
-    #     command: |
-    #       sudo apt-get install jq
-    #       pip install awscli
-
-    # - run:
-    #     name: Deploy Layer
-    #     command: |
-    #       for PYTHON_VERSION in ${PYTHON_VERSIONS}; do
-    #         ./scripts/deploy-layer.sh "build"
-    #         ./scripts/deploy-layer.sh "rasterio"
-    #         ./scripts/deploy-layer.sh "full"
-    #       done
+    - persist_to_workspace:
+      root: ~/amazonlinux
+      paths:
+        - layer-gdal*.zip
 
 jobs:
   "gdal-3.0":
@@ -114,9 +104,46 @@ jobs:
       - GDAL_VERSION=2.4
       - PYTHON_VERSIONS=3.6 3.7
 
+  "deploy":
+    - image: circleci/python:3.7.2
+    environment:
+      - GDAL_VERSION=2.4 3.0
+      - PYTHON_VERSIONS=3.6 3.7
+    working_directory: ~/amazonlinux
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/amazonlinux
+      - run:
+          name: install cmd
+          command: |
+            sudo apt-get install jq
+            pip install awscli --user
+      - run:
+          command: ls -la
+      # - run:
+      #     name: Deploy Layer
+      #     command: |
+      #       alias aws='~/.local/bin/aws'
+      #       for GDAL_VERSION in ${GDAL_VERSIONS}; do
+      #         for PYTHON_VERSION in ${PYTHON_VERSIONS}; do
+      #           ./scripts/deploy-layer.sh "build"
+      #           ./scripts/deploy-layer.sh "rasterio"
+      #           ./scripts/deploy-layer.sh "full"
+      #         done
+      #       done
+
+
 workflows:
   version: 2
   build_and_push:
     jobs:
       - "gdal-3.0"
       - "gdal-2.4"
+      - deploy:
+        requires:
+          - "gdal-3.0"
+          - "gdal-2.4"
+        # filters:
+        #   branches:
+        #     only: master

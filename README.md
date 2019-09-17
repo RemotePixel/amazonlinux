@@ -24,7 +24,7 @@ The aim of this repo is to construct docker image to use when creating AWS Lambd
 ### Content
 - build: GDAL Libs and python with numpy and cython
 - rasterio: GDAL Libs, python with numpy and cython and rasterio
-- full: GDAL Libs, python with gdal, rasterio, fiona, shapely
+- full: GDAL Libs, python with gdal, rasterio, fiona, shapely (Note: fiona doesn't support gdal>2.4 for now)
 
 ## Lambda Layers
 
@@ -314,7 +314,7 @@ A couple environment variables are set when creating the images:
 
 
 ## Package architecture and AWS Lambda config
-:warning: AWS Lambda will need `GDAL_DATA` to be set to `/var/task/share/gdal` to be able to work :warning:
+:warning: AWS Lambda will need `GDAL_DATA` to be set to `/var/task/share/gdal` and `PROJ_LIB` to `/var/task/share/proj` to be able to work :warning:
 
 ```
 package.zip
@@ -327,7 +327,7 @@ package.zip
 ```
 
 ## Layer architecture and AWS Lambda config
-:warning: AWS Lambda will need `GDAL_DATA` to be set to `/opt/share/gdal` to be able to work :warning:
+:warning: AWS Lambda will need `GDAL_DATA` to be set to `/opt/share/gdal` and `PROJ_LIB` to be set to `/opt/share/proj` to be able to work :warning:
 
 ```
 layer.zip
@@ -340,6 +340,7 @@ layer.zip
 
 ## Optimal AWS Lambda config
 - **GDAL_DATA:** /var/task/share/gdal or /opt/share/gdal
+- **PROJ_LIB:** /var/task/share/proj or /opt/share/proj
 - **GDAL_CACHEMAX:** 512
 - **VSI_CACHE:** TRUE
 - **VSI_CACHE_SIZE:** 536870912
