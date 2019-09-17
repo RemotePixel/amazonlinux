@@ -141,10 +141,10 @@ workflows:
     jobs:
       - "gdal-3.0"
       - "gdal-2.4"
-      - deploy
-        # requires:
-        #   - "gdal-3.0"
-        #   - "gdal-2.4"
-        # # filters:
-        # #   branches:
-        # #     only: master
+      - deploy:
+        requires:
+          - "gdal-3.0"
+          - "gdal-2.4"
+        # filters:
+        #   branches:
+        #     only: master
