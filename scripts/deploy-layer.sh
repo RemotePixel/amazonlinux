@@ -19,27 +19,32 @@ AWS_REGIONS=(
     us-west-1 us-west-2
 )
 
+PYTHON_VERSION_NODOT="${PYTHON_VERSION//.}"
+GDAL_VERSION_NODOT="${GDAL_VERSION//.}"
+
 LAYER_RUNTIME=python${PYTHON_VERSION}
-LAYER_PREFIX=amazonlinux-gdal${GDAL_VERSION}-py
-LNAME=${LAYER_PREFIX}${PYTHON_VERSION}-${LAYER_NAME}
+LNAME=amazonlinux-gdal${PYTHON_VERSION_NODOT}-py${PYTHON_VERSION_NODOT}-${LAYER_NAME}
 LAYER_DESC="Lambda Layer with GDAL${GDAL_VERSION} - ${LAYER_RUNTIME}"
 
 LOCAL_LNAME=layer-gdal${GDAL_VERSION}-py${PYTHON_VERSION}-${LAYER_NAME}.zip
-LAYER_HASH=$(sha256sum ${LOCAL_LNAME})
+LAYER_HASH=$(sha256sum ${LOCAL_LNAME} | awk '{print $1}')
 
+echo "Deploying ${LNAME}"
 for AWS_REGION in "${AWS_REGIONS[@]}"; do
     # Get hash of latest version
+    echo "List Layer in ${AWS_REGION}"
     LIST_LAYERS=$(aws lambda list-layer-versions --compatible-runtime ${LAYER_RUNTIME} --layer-name ${LNAME} --region ${AWS_REGION})
     AWS_LAYER_VERSION=$(jq -r '.LayerVersions[0].Version' <<< "${LIST_LAYERS}")
 
-    if [[ $LAYER_VERSION = "null" ]];
+    if [[ $AWS_LAYER_VERSION = "null" ]];
     then
         AWS_LAYER_DESC="dummy"
         AWS_LAYER_VERSION=1
     else
-        AWS_LAYER=$(aws lambda get-layer-version --version-number ${AWS_LAYER_VERSION} --layer-name $LAYER_NAME --region $AWS_REGION)
-        AWS_LAYER_DESC=$(jq -r '.Description' <<< "${GET_LAYER}")
-		AWS_LAYER_SHA=$(echo "${GET_LAYER_DESC}" | cut -d "|" -f 2)
+        AWS_LAYER=$(aws lambda get-layer-version --version-number ${AWS_LAYER_VERSION} --layer-name ${LNAME} --region ${AWS_REGION})
+        AWS_LAYER_DESC=$(jq -r '.Description' <<< "${AWS_LAYER}")
+		AWS_LAYER_SHA=$(echo "${AWS_LAYER_DESC}" | awk '{print $8}')
+        
         # increment version
         let "AWS_LAYER_VERSION++"
     fi
@@ -50,7 +55,7 @@ for AWS_REGION in "${AWS_REGIONS[@]}"; do
         --region $AWS_REGION \
         --layer-name $LNAME \
         --zip-file fileb://$LOCAL_LNAME \
-        --description "${LAYER_DESC} |${LAYER_HASH}" \
+        --description "${LAYER_DESC} | ${LAYER_HASH}" \
         --compatible-runtimes ${LAYER_RUNTIME} \
         --license-info MIT
 

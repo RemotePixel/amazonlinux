@@ -121,18 +121,16 @@ jobs:
             sudo apt-get install jq
             pip install awscli --user
       - run:
-          command: ls -la
-      # - run:
-      #     name: Deploy Layer
-      #     command: |
-      #       alias aws='~/.local/bin/aws'
-      #       for GDAL_VERSION in ${GDAL_VERSIONS}; do
-      #         for PYTHON_VERSION in ${PYTHON_VERSIONS}; do
-      #           ./scripts/deploy-layer.sh "build"
-      #           ./scripts/deploy-layer.sh "rasterio"
-      #           ./scripts/deploy-layer.sh "full"
-      #         done
-      #       done
+          name: Deploy Layer
+          command: |
+            alias aws='~/.local/bin/aws'
+            for GDAL_VERSION in ${GDAL_VERSIONS}; do
+              for PYTHON_VERSION in ${PYTHON_VERSIONS}; do
+                ./scripts/deploy-layer.sh "build"
+                ./scripts/deploy-layer.sh "rasterio"
+                ./scripts/deploy-layer.sh "full"
+              done
+            done
 
 
 workflows:
