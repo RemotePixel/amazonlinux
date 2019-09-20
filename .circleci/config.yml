@@ -24,7 +24,10 @@ common: &common
           if [[ "$test" =~ "OK" ]]; then echo "PASSED"; else exit 1; fi
     - run:
         name: push image
-        command: docker push remotepixel/amazonlinux:gdal${GDAL_VERSION}
+        command: |
+            if [[ "$CIRCLE_BRANCH" == "master" ]]; then
+              docker push remotepixel/amazonlinux:gdal${GDAL_VERSION}
+            fi
     - run:
         name: create layers 
         command: |
@@ -81,9 +84,11 @@ common: &common
             build-layer "rasterio"
             WITH_BINARIES=1 build-layer "full"
             test-layer
-            push-image "build"
-            push-image "rasterio"
-            push-image "full"
+            if [[ "$CIRCLE_BRANCH" == "master" ]]; then
+              push-image "build"
+              push-image "rasterio"
+              push-image "full"
+            fi
           done
 
     - persist_to_workspace:
@@ -108,7 +113,7 @@ jobs:
     docker:
       - image: circleci/python:3.7.2
         environment:
-          - GDAL_VERSION=2.4 3.0
+          - GDAL_VERSIONS=2.4 3.0
           - PYTHON_VERSIONS=3.6 3.7
     working_directory: ~/amazonlinux
     steps:
@@ -143,4 +148,7 @@ workflows:
           requires:
             - "gdal-3.0"
             - "gdal-2.4"
-
+          filters:
+            branches:
+              only:
+                - master
