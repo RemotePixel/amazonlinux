@@ -22,12 +22,12 @@ AWS_REGIONS=(
 PYTHON_VERSION_NODOT="${PYTHON_VERSION//.}"
 GDAL_VERSION_NODOT="${GDAL_VERSION//.}"
 
-LAYER_RUNTIME=python${PYTHON_VERSION}
-LNAME=amazonlinux-gdal${PYTHON_VERSION_NODOT}-py${PYTHON_VERSION_NODOT}-${LAYER_NAME}
-LAYER_DESC="Lambda Layer with GDAL${GDAL_VERSION} - ${LAYER_RUNTIME}"
-
 LOCAL_LNAME=layer-gdal${GDAL_VERSION}-py${PYTHON_VERSION}-${LAYER_NAME}.zip
 LAYER_HASH=$(sha256sum ${LOCAL_LNAME} | awk '{print $1}')
+
+LAYER_RUNTIME=python${PYTHON_VERSION}
+LNAME=gdal${GDAL_VERSION_NODOT}-py${PYTHON_VERSION_NODOT}-${LAYER_NAME}
+LAYER_DESC="Lambda Layer with GDAL${GDAL_VERSION} - ${LAYER_RUNTIME}"
 
 echo "Deploying ${LNAME}"
 for AWS_REGION in "${AWS_REGIONS[@]}"; do
@@ -38,19 +38,22 @@ for AWS_REGION in "${AWS_REGIONS[@]}"; do
 
     if [[ $AWS_LAYER_VERSION = "null" ]];
     then
+        echo "New Lambda Layer"
         AWS_LAYER_DESC="dummy"
         AWS_LAYER_VERSION=1
     else
         AWS_LAYER=$(aws lambda get-layer-version --version-number ${AWS_LAYER_VERSION} --layer-name ${LNAME} --region ${AWS_REGION})
         AWS_LAYER_DESC=$(jq -r '.Description' <<< "${AWS_LAYER}")
 		AWS_LAYER_SHA=$(echo "${AWS_LAYER_DESC}" | awk '{print $8}')
-        
+        echo "Checking SHA"
+
         # increment version
         let "AWS_LAYER_VERSION++"
     fi
-
+    
     if [[ $LAYER_HASH != $AWS_LAYER_SHA ]];
     then
+        echo "Deploying version ${AWS_LAYER_VERSION}"
         aws lambda publish-layer-version \
         --region $AWS_REGION \
         --layer-name $LNAME \
@@ -66,5 +69,7 @@ for AWS_REGION in "${AWS_REGIONS[@]}"; do
             --version-number ${AWS_LAYER_VERSION} \
             --principal '*' \
             --action lambda:GetLayerVersion
+    else
+        echo "No Change needed, layer is up to date"
     fi
 done
