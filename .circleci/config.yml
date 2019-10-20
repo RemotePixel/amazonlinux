@@ -130,7 +130,7 @@ jobs:
           command: |
             for GDAL_VERSION in ${GDAL_VERSIONS}; do
               for PYTHON_VERSION in ${PYTHON_VERSIONS}; do
-                ./scripts/deploy-layer.sh "geo"
+                ./scripts/deploy-layer.sh "geo" $GDAL_VERSION $PYTHON_VERSION
               done
             done
 

@@ -5,6 +5,8 @@ echo "Deploy Lambda Layer"
 echo "-------------------"
 
 LAYER_NAME=$1
+GDAL_VERSION=$2
+PYTHON_VERSION=$3
 
 AWS_REGIONS=( 
     ap-northeast-1 ap-northeast-2
