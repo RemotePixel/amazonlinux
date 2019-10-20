@@ -41,7 +41,7 @@ Note: The `Layers` docker image are usefull when you want to create lambda packa
   - numpy
   - GDAL
 
-  arn: **`arn:aws:lambda:{REGION}:524387336408:layer:gdal30-py37-geo**
+  arn: **`arn:aws:lambda:{REGION}:524387336408:layer:gdal${version}-py${version}-geo**
 
 #### Regions
 - ap-northeast-1
