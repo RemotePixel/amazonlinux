@@ -35,9 +35,13 @@ Note: The `Layers` docker image are usefull when you want to create lambda packa
 
 ## Lambda Layers
 
-#### Arns
+- **gdal${version}-py${version}-geo**
+  - rasterio
+  - shapely
+  - numpy
+  - GDAL
 
-//To Do
+  arn: **`arn:aws:lambda:{REGION}:524387336408:layer:gdal30-py37-geo**
 
 #### Regions
 - ap-northeast-1
@@ -203,7 +207,7 @@ $ gdalinfo --formats
 You can use the docker container to either build a full package (you provide all the libraries)
 or adapt for the use of AWS Lambda layer.
 
-## 1. Create full package ([/examples/package](/examples/package))
+## 1. Create full package (see [/examples/package](/examples/package))
 This is like we used to do before (with remotepixel/amazonlinux-gdal images)
 
 - dockerfile
