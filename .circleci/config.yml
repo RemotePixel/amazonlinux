@@ -49,7 +49,7 @@ common: &common
                 --env LAYER_NAME=${LAYER_NAME} \
                 -itd remotepixel/amazonlinux:gdal${GDAL_VERSION}-py${PYTHON_VERSION}-${LAYER_NAME} bash
               docker cp ./scripts/create-lambda-layer.sh lambda:/tmp/create-lambda-layer.sh
-              docker exec -it lambda bash -c '/tmp/create-lambda-layer.sh ${GDAL_VERSION} ${PYTHON_VERSION} ${LAYER_NAME}'
+              docker exec -it lambda bash -c '/tmp/create-lambda-layer.sh gdal${GDAL_VERSION}-py${PYTHON_VERSION}-${LAYER_NAME}'
               docker stop lambda
               docker rm lambda
           }
