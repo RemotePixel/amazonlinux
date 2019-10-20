@@ -1,4 +1,4 @@
-FROM remotepixel/amazonlinux:gdal3.0-py3.7
+FROM remotepixel/amazonlinux:gdal3.0-py3.7-geo
 
 # Build a lambda package to be used with the lambda layer.
 # Basically we don't want to replicated existant modules found in the layer ($PYTHONPATH)
@@ -7,4 +7,4 @@ ENV PYTHONUSERBASE=/var/task
 
 # Create a package
 COPY handler.py $PYTHONUSERBASE/handler.py
-RUN pip install rasterio --no-binary numpy,rasterio --user
+RUN pip install mercantile --user
