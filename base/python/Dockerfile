@@ -16,6 +16,10 @@ RUN \
     pip3 install pip -U \
     && pip3 install cython numpy --no-binary numpy
 
+# The PREFIX should be the same as in gdal{version}:latest
+# When building rasterio, setup.py will get libs directoy from gdal-config
+# $ gdal-config --libs
+# -L/opt/lib -lgdal
 ENV PREFIX /opt
 
 COPY --from=0 /opt/lib/ $PREFIX/lib/ 

@@ -1,7 +1,7 @@
 version: 2
 common: &common
   machine:
-    docker_layer_caching: true 
+    docker_layer_caching: false 
   working_directory: ~/amazonlinux
   steps:
     - checkout
@@ -48,15 +48,14 @@ common: &common
                 --env PYTHON_VERSION=${PYTHON_VERSION} \
                 --env LAYER_NAME=${LAYER_NAME} \
                 -itd remotepixel/amazonlinux:gdal${GDAL_VERSION}-py${PYTHON_VERSION}-${LAYER_NAME} bash
-              docker cp ./scripts/create-lambda-layer.sh lambda:/tmp/create-layer.sh
-              docker exec -it lambda bash -c '/tmp/create-layer.sh ${GDAL_VERSION} ${PYTHON_VERSION} ${LAYER_NAME}'
+              docker cp ./scripts/create-lambda-layer.sh lambda:/tmp/create-lambda-layer.sh
+              docker exec -it lambda bash -c '/tmp/create-lambda-layer.sh gdal${GDAL_VERSION}-py${PYTHON_VERSION}-${LAYER_NAME}'
               docker stop lambda
               docker rm lambda
           }
 
           test-layer () {
             echo "Test layer for python ${PYTHON_VERSION}"
-            LAYER_NAME=rasterio
             docker run \
                 --name lambda \
                 --volume $(pwd)/:/local \
@@ -66,7 +65,7 @@ common: &common
                 --env PYTHON_VERSION=${PYTHON_VERSION} \
                 --env PYTHONPATH=/opt/python:/var/runtime \
                 -itd lambci/lambda:build-python${PYTHON_VERSION} bash
-            docker cp ./layer-gdal${GDAL_VERSION}-py${PYTHON_VERSION}-${LAYER_NAME}.zip lambda:/tmp/layer.zip
+            docker cp ./layer-gdal${GDAL_VERSION}-py${PYTHON_VERSION}-geo.zip lambda:/tmp/layer.zip
             docker exec -it lambda bash -c 'unzip -q /tmp/layer.zip -d /opt/'
             driver=$(docker exec -it lambda python -c 'import rasterio; src = rasterio.open("https://oin-hotosm.s3.amazonaws.com/5ac626e091b5310010e0d482/0/5ac626e091b5310010e0d483.tif"); print(src.meta["driver"])')
             docker stop lambda
@@ -75,19 +74,22 @@ common: &common
           }
 
           push-image () {
-              LAYER_NAME=$1
-              docker push remotepixel/amazonlinux:gdal${GDAL_VERSION}-py${PYTHON_VERSION}-${LAYER_NAME}
+              IMAGE_NAME=$1
+              docker push remotepixel/amazonlinux:gdal${GDAL_VERSION}-${IMAGE_NAME}
           }
 
           for PYTHON_VERSION in ${PYTHON_VERSIONS}; do
-            build-layer "build"
-            build-layer "rasterio"
-            WITH_BINARIES=1 build-layer "full"
+            docker build \
+              --build-arg PYTHON_VERSION=${PYTHON_VERSION}\
+              --build-arg GDAL_VERSION=${GDAL_VERSION} \
+              -f base/python/Dockerfile \
+              -t remotepixel/amazonlinux:gdal${GDAL_VERSION}-py${PYTHON_VERSION} .
+
+            build-layer "geo"
             test-layer
             if [[ "$CIRCLE_BRANCH" == "master" ]]; then
-              push-image "build"
-              push-image "rasterio"
-              push-image "full"
+              push-image "py${PYTHON_VERSION}"
+              push-image "py${PYTHON_VERSION}-geo"
             fi
           done
 
@@ -101,20 +103,18 @@ jobs:
     <<: *common
     environment:
       - GDAL_VERSION=3.0
-      - PYTHON_VERSIONS=3.6 3.7
-
+      - PYTHON_VERSIONS=3.7
   "gdal-2.4":
     <<: *common
     environment:
       - GDAL_VERSION=2.4
-      - PYTHON_VERSIONS=3.6 3.7
-
+      - PYTHON_VERSIONS=3.7
   "deploy":
     docker:
       - image: circleci/python:3.7.2
         environment:
           - GDAL_VERSIONS=2.4 3.0
-          - PYTHON_VERSIONS=3.6 3.7
+          - PYTHON_VERSIONS=3.7
     working_directory: ~/amazonlinux
     steps:
       - checkout
@@ -124,19 +124,15 @@ jobs:
           name: install cmd
           command: |
             sudo apt-get install jq
-            pip install awscli --user
+            sudo pip install awscli
       - run:
           name: Deploy Layer
           command: |
-            alias aws='~/.local/bin/aws'
             for GDAL_VERSION in ${GDAL_VERSIONS}; do
               for PYTHON_VERSION in ${PYTHON_VERSIONS}; do
-                ./scripts/deploy-layer.sh "build"
-                ./scripts/deploy-layer.sh "rasterio"
-                ./scripts/deploy-layer.sh "full"
+                ./scripts/deploy-layer.sh "geo"
               done
             done
-
 
 workflows:
   version: 2

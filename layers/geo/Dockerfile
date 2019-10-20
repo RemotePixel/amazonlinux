@@ -1,12 +1,13 @@
 ARG GDAL_VERSION
 ARG PYTHON_VERSION
 
-FROM remotepixel/amazonlinux:gdal${GDAL_VERSION}-py${PYTHON_VERSION}-build
+FROM remotepixel/amazonlinux:gdal${GDAL_VERSION}-py${PYTHON_VERSION}
 
-# We can add pyproj too
+# To Do 
+# - add pyproj
+# - add fiona (incompatible with gdal3.0)
 RUN pip install \
     rasterio \
-    fiona \
     shapely \
     numpy \
     GDAL~=$(gdal-config --version) \

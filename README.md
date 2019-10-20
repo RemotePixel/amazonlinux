@@ -1,10 +1,10 @@
-# amazonlinux-gdal
+# amazonlinux
 
-Create an **AWS lambda** like docker image with python 3 and GDAL.
+[![CircleCI](https://circleci.com/gh/RemotePixel/amazonlinux.svg?style=svg)](https://circleci.com/gh/RemotePixel/amazonlinux)
+
+Create an **AWS lambda** like docker images and lambda layer with python 3 and GDAL.
 
 Inspired from [developmentseed/geolambda](https://github.com/developmentseed/geolambda) and [mojodna/lambda-layer-rasterio](https://github.com/mojodna/lambda-layer-rasterio).
-
-The aim of this repo is to construct docker image to use when creating AWS Lambda package (with python 3).
 
 ## Dockers images
 ### GDAL Versions - Based on lambci/lambda-base:build
@@ -14,23 +14,34 @@ The aim of this repo is to construct docker image to use when creating AWS Lambd
 ### Python - Based on lambci/lambda:build-python*
 
 - **3.0.1**
-  - **remotepixel/amazonlinux:gdal3.0-py3.7-(build|rasterio|full)**
-  - **remotepixel/amazonlinux:gdal3.0-py3.6-(build|rasterio|full)**
+  - **remotepixel/amazonlinux:gdal3.0-py3.7**
 
 - **2.4.2**
-  - **remotepixel/amazonlinux:gdal2.4-py3.7-(build|rasterio|full)**
-  - **remotepixel/amazonlinux:gdal2.4-py3.6-(build|rasterio|full)**
+  - **remotepixel/amazonlinux:gdal2.4-py3.7**
 
-### Content
-- build: GDAL Libs and python with numpy and cython
-- rasterio: GDAL Libs, python with numpy and cython and rasterio
-- full: GDAL Libs, python with gdal, rasterio, fiona, shapely (Note: fiona doesn't support gdal>2.4 for now)
+Content: GDAL Libs and python with numpy and cython
+
+### Layers*
+
+- **3.0.1**
+  - **remotepixel/amazonlinux:gdal3.0-py3.7-geo**
+
+- **2.4.2**
+  - **remotepixel/amazonlinux:gdal2.4-py3.7-geo**
+
+Content: base + rasterio, gdal and shapely
+
+Note: The `Layers` docker image are usefull when you want to create lambda package to be used in addition to the lambda layer. 
 
 ## Lambda Layers
 
-#### Arns
+- **gdal${version}-py${version}-geo**
+  - rasterio
+  - shapely
+  - numpy
+  - GDAL
 
-//To Do
+  arn: **`arn:aws:lambda:{REGION}:524387336408:layer:gdal30-py37-geo**
 
 #### Regions
 - ap-northeast-1
@@ -49,16 +60,6 @@ The aim of this repo is to construct docker image to use when creating AWS Lambd
 - us-east-2
 - us-west-1
 - us-west-2
-
-### Available Drivers (shipped with GDAL)
-- Proj4
-- GEOS
-- GeoTIFF
-- ZSTD
-- WEBP
-- JPEG2000
-- PNG
-- JPEGTURBO
 
 ### Available drivers
 
@@ -206,14 +207,14 @@ $ gdalinfo --formats
 You can use the docker container to either build a full package (you provide all the libraries)
 or adapt for the use of AWS Lambda layer.
 
-## 1. Create full package ([/examples/package](/examples/package))
+## 1. Create full package (see [/examples/package](/examples/package))
 This is like we used to do before (with remotepixel/amazonlinux-gdal images)
 
 - dockerfile
 ```Dockerfile
 # Here we create a package (like previously with amazonlambda-gdal)
 # we use the "-build" image because we don't want need pre-installed libaries
-FROM remotepixel/amazonlinux:gdal3.0-py3.7-build
+FROM remotepixel/amazonlinux:gdal3.0-py3.7
 
 ENV PACKAGE_PREFIX=/var/task
 
@@ -254,9 +255,10 @@ docker stop lambda
 docker rm lambda
 ```
 
-## 2. Use Lambda Layer ([/examples/layer](/examples/layer))
+## 2. Use Lambda Layer (see [/examples/layer](/examples/layer))
 
 - dockerfile
+
 Here we install mercantile and we add our handler method. 
 The final package structure should be 
 
@@ -267,9 +269,10 @@ package/
   |___ mercantile/
 ```
 
-Let's use `-rasterio` layer (you could use `-full` too)
+Let's use `-geo` layer
+
 ```Dockerfile
-FROM remotepixel/amazonlinux:gdal3.0-py3.7-rasterio
+FROM remotepixel/amazonlinux:gdal3.0-py3.7-geo
 
 # Basically we don't want to replicated existant modules found in the layer ($PYTHONPATH)
 # So we use the $PYTHONUSERBASE trick to set the output directory
@@ -312,9 +315,8 @@ A couple environment variables are set when creating the images:
 - **GEOS_CONFIG**: `$PREFIX/bin/geos-config`
 - **PATH** has been updated to add `$PREFIX/bin` in order to access gdal binaries
 
-
-## Package architecture and AWS Lambda config
-:warning: AWS Lambda will need `GDAL_DATA` to be set to `/var/task/share/gdal` and `PROJ_LIB` to `/var/task/share/proj` to be able to work :warning:
+# Package architecture and AWS Lambda config
+### Simple config
 
 ```
 package.zip
@@ -323,24 +325,30 @@ package.zip
   |___ share/    # GDAL/PROJ data directories   
   |___ rasterio/
   ....
+  |___ handler.py
   |___ other python module
 ```
 
-## Layer architecture and AWS Lambda config
-:warning: AWS Lambda will need `GDAL_DATA` to be set to `/opt/share/gdal` and `PROJ_LIB` to be set to `/opt/share/proj` to be able to work :warning:
+##### Lambda config
+- **GDAL_DATA:** /var/task/share/gdal
+- **PROJ_LIB:** /var/task/share/proj
+
+
+### When using Lambda layer
 
 ```
-layer.zip
+package.zip
   |
-  |___ bin/      # Binaries
-  |___ lib/      # Shared libraries (GDAL, PROJ, GEOS...)
-  |___ share/    # GDAL/PROJ data directories   
-  |___ python/
+  |___ handler.py
+  |___ other python module  
 ```
 
-## Optimal AWS Lambda config
+##### Lambda config
 - **GDAL_DATA:** /var/task/share/gdal or /opt/share/gdal
 - **PROJ_LIB:** /var/task/share/proj or /opt/share/proj
+
+
+# Other variable for optimal config
 - **GDAL_CACHEMAX:** 512
 - **VSI_CACHE:** TRUE
 - **VSI_CACHE_SIZE:** 536870912
@@ -350,3 +358,17 @@ layer.zip
 - **GDAL_HTTP_VERSION:** 2
 - **GDAL_DISABLE_READDIR_ON_OPEN:** "EMPTY_DIR"
 - **CPL_VSIL_CURL_ALLOWED_EXTENSIONS:** ".TIF,.tif,.jp2,.vrt"
+
+
+# Layer architecture
+
+The AWS Layer created within this repository have this architecture:
+
+```
+layer.zip
+  |
+  |___ bin/      # Binaries
+  |___ lib/      # Shared libraries (GDAL, PROJ, GEOS...)
+  |___ share/    # GDAL/PROJ data directories   
+  |___ python/
+```

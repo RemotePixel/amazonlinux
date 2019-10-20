@@ -1,7 +1,7 @@
 """Test."""
 
-#import rasterio
-#import mercantile
+import rasterio
+import mercantile
 import numpy
 
 
