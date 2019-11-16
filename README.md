@@ -13,20 +13,20 @@ Inspired from [developmentseed/geolambda](https://github.com/developmentseed/geo
 
 ### Python - Based on lambci/lambda:build-python*
 
-- **3.0.1**
+- **3.0** (16 Nov 2019)
   - **remotepixel/amazonlinux:gdal3.0-py3.7**
 
-- **2.4.2**
+- **2.4** (16 Nov. 2019)
   - **remotepixel/amazonlinux:gdal2.4-py3.7**
 
 Content: GDAL Libs and python with numpy and cython
 
 ### Layers*
 
-- **3.0.1**
+- **3.0**
   - **remotepixel/amazonlinux:gdal3.0-py3.7-geo**
 
-- **2.4.2**
+- **2.4**
   - **remotepixel/amazonlinux:gdal2.4-py3.7-geo**
 
 Content: base + rasterio, gdal and shapely
@@ -41,7 +41,18 @@ Note: The `Layers` docker image are usefull when you want to create lambda packa
   - numpy
   - GDAL
 
-  arn: **`arn:aws:lambda:{REGION}:524387336408:layer:gdal${version}-py${version}-geo**
+  ARN:
+  
+  **arn:aws:lambda:{REGION}:524387336408:layer:gdal${version}-py${version}-geo:{version}**
+
+  Layer Version:
+  - gdal3.0: **3**
+  - gdal2.4: **2**
+
+  Layer Size:
+  - gdal3.0: **34.7Mb** (111.5Mb)
+  - gdal2.4: **33Mb** (108.9Mb)
+
 
 #### Regions
 - ap-northeast-1

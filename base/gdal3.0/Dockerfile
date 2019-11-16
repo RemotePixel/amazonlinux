@@ -69,8 +69,8 @@ RUN mkdir /tmp/zstd \
 # OSGEO
 ENV \
   GEOS_VERSION=3.7.2 \
-  GDAL_VERSION=3.0.1 \
-  PROJ_VERSION=6.1.1
+  GDAL_VERSION=release/3.0 \
+  PROJ_VERSION=6.2.1
 
 # proj
 RUN mkdir /tmp/proj \
@@ -92,7 +92,7 @@ ENV PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig/
 
 # gdal
 RUN mkdir /tmp/gdal \
-  && curl -sfL https://github.com/OSGeo/gdal/archive/v${GDAL_VERSION}.tar.gz | tar zxf - -C /tmp/gdal --strip-components=2
+  && curl -sfL https://github.com/OSGeo/gdal/archive/${GDAL_VERSION}.tar.gz | tar zxf - -C /tmp/gdal --strip-components=2
 
 RUN cd /tmp/gdal \
   && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure \
