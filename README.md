@@ -8,15 +8,15 @@ Inspired from [developmentseed/geolambda](https://github.com/developmentseed/geo
 
 ## Dockers images
 ### GDAL Versions - Based on lambci/lambda-base:build
-  - **remotepixel/amazonlinux:gdal3.0**
-  - **remotepixel/amazonlinux:gdal2.4**
+  - 3.0.2 (16 Nov. 2019) / **remotepixel/amazonlinux:gdal3.0** 
+  - 2.4.3 (16 Nov. 2019) / **remotepixel/amazonlinux:gdal2.4**
 
 ### Python - Based on lambci/lambda:build-python*
 
-- **3.0** (16 Nov 2019)
+- **3.0**
   - **remotepixel/amazonlinux:gdal3.0-py3.7**
 
-- **2.4** (16 Nov. 2019)
+- **2.4**
   - **remotepixel/amazonlinux:gdal2.4-py3.7**
 
 Content: GDAL Libs and python with numpy and cython

@@ -17,6 +17,7 @@ common: &common
           docker run \
               --name lambda \
               --volume $(pwd)/:/local \
+              --env GDALVERSION=${GDAL_VERSION} \
               -itd remotepixel/amazonlinux:gdal${GDAL_VERSION} bash
           test=$(docker exec -it lambda bash -c '/local/scripts/tests.sh')
           docker stop lambda
