@@ -117,7 +117,6 @@ RUN cd /tmp/gdal \
       --without-bsb \
       --without-cfitsio \
       --without-ecw \
-      --without-expat \
       --without-fme \
       --without-freexl \
       --without-gif \
@@ -149,7 +148,6 @@ RUN cd /tmp/gdal \
       --without-python \
       --without-qhull \
       --without-sde \
-      --without-xerces \
       --without-xml2
 
 RUN cd /tmp/gdal \
