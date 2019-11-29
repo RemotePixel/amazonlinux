@@ -115,16 +115,6 @@ RUN cd /tmp/gdal \
   && touch config.rpath \
   && LDFLAGS="-Wl,-rpath,'\$\$ORIGIN'" CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure \
       --disable-debug \
-      --disable-all-optional-drivers \
-      --enable-driver-csv \
-      --enable-driver-gpkg \
-      --enable-driver-gml \
-      --enable-driver-mbtiles \
-      --enable-driver-mvt \
-      --enable-driver-shape \
-      --enable-driver-wms \
-      --enable-driver-wmts \
-      --enable-driver-xyz \
       --enable-lto \
       --prefix=$PREFIX \
       --with-crypto \
@@ -142,6 +132,11 @@ RUN cd /tmp/gdal \
       --with-xml2 \
       --with-webp=$PREFIX \
       --with-zstd=$PREFIX \
+      --without-bsb \
+      --without-cfitsio \
+      --without-ecw \
+      --without-fme \
+      --without-freexl \
       --without-jpeg12 \
       --without-gif \
       --without-gnm \
@@ -152,52 +147,7 @@ RUN cd /tmp/gdal \
 
 RUN cd /tmp/gdal \
   && make -j $(nproc) --silent && make install && make clean \
-  && rm -rf /tmp/gdal \
-  && (for i in \
-          # BAG driver
-          $PREFIX/share/gdal/bag*.xml \
-          # SXF driver
-          $PREFIX/share/gdal/default.rsc \
-          # unused
-          $PREFIX/share/gdal/*.svg \
-          # unused
-          $PREFIX/share/gdal/*.png \
-          # NITF driver
-          $PREFIX/share/gdal/nitf* \
-          # NITF driver
-          $PREFIX/share/gdal/gt_datum.csv \
-          # NITF driver
-          $PREFIX/share/gdal/gt_ellips.csv \
-          # PDF driver
-          $PREFIX/share/gdal/pdf* \
-          # PDS4 driver
-          $PREFIX/share/gdal/pds* \
-          # S57 driver
-          $PREFIX/share/gdal/s57* \
-          # VDV driver
-          $PREFIX/share/gdal/vdv* \
-          # DXF driver
-          $PREFIX/share/gdal/*.dxf \
-          # DGN driver
-          $PREFIX/share/gdal/*.dgn \
-          # OSM driver
-          $PREFIX/share/gdal/osm* \
-          # GMLAS driver
-          $PREFIX/share/gdal/gmlas* \
-          # PLScenes driver
-          $PREFIX/share/gdal/plscenes* \
-          # netCDF driver
-          $PREFIX/share/gdal/netcdf_config.xsd \
-          # PCIDSK driver
-          $PREFIX/share/gdal/pci* \
-          # ECW and ERS drivers
-          $PREFIX/share/gdal/ecw_cs.wkt \
-          # EEDA driver
-          $PREFIX/share/gdal/eedaconf.json \
-          # MAP driver / ImportFromOZI()
-          $PREFIX/share/gdal/ozi_* \
-      ;do rm $i; done)
-
+  && rm -rf /tmp/gdal 
 
 # from https://github.com/pypa/manylinux/blob/d8ef5d47433ba771fa4403fd48f352c586e06e43/docker/build_scripts/build.sh#L133-L138
 # Install patchelf (latest with unreleased bug fixes)

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 version=$(gdal-config --version)
-echo Tests for GDAL ${version}
+echo Running tests for GDAL ${version}
 
 if [[ ! "$(gdal-config --prefix | grep $PREFIX)" ]]; then echo "NOK" && exit 1; fi
 if [[ ! "$(gdal-config --version | grep $GDALVERSION)" ]]; then echo "NOK" && exit 1; fi
