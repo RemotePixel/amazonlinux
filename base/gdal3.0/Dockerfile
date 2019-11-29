@@ -66,16 +66,30 @@ RUN mkdir /tmp/zstd \
   && make -j $(nproc) PREFIX=$PREFIX ZSTD_LEGACY_SUPPORT=0 CFLAGS=-O1 --silent && make install PREFIX=$PREFIX ZSTD_LEGACY_SUPPORT=0 CFLAGS=-O1 && make clean \
   && rm -rf /tmp/zstd
 
+RUN mkdir /tmp/sqlite \
+  && curl -sfL https://www.sqlite.org/2019/sqlite-autoconf-3300100.tar.gz  | tar zxf - -C /tmp/sqlite --strip-components=1 \
+  && cd /tmp/sqlite \
+  && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX --disable-static \
+  && make -j $(nproc) --silent && make install && make clean \
+  && rm -rf /tmp/sqlite
+
 # OSGEO
 ENV \
   GEOS_VERSION=3.7.2 \
   PROJ_VERSION=6.2.1
 
+ENV \
+  SQLITE3_LIBS="-L${PREFIX}/lib -lsqlite3" \
+  SQLITE3_INCLUDE_DIR="${PREFIX}/include" \
+  SQLITE3_CFLAGS="$CFLAGS -I${PREFIX}/include" \
+  PATH=${PREFIX}/bin/:$PATH
+
 # proj
 RUN mkdir /tmp/proj \
    && curl -sfL http://download.osgeo.org/proj/proj-$PROJ_VERSION.tar.gz | tar zxf - -C /tmp/proj --strip-components=1 \
+   && curl -sfL http://download.osgeo.org/proj/proj-datumgrid-latest.tar.gz | tar zxf - -C /tmp/proj/data \
    && cd /tmp/proj \
-   && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX \
+   && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX --disable-static --enable-lto \
    && make -j $(nproc) --silent && make install && make clean \
    && rm -rf /tmp/proj
 
@@ -83,7 +97,7 @@ RUN mkdir /tmp/proj \
 RUN mkdir /tmp/geos \
   && curl -sfL http://download.osgeo.org/geos/geos-$GEOS_VERSION.tar.bz2 | tar jxf - -C /tmp/geos --strip-components=1 \
   && cd /tmp/geos \
-  && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX \
+  && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX --disable-static \
   && make -j $(nproc) --silent && make install && make clean \
   && rm -rf /tmp/geos
 
@@ -107,9 +121,13 @@ RUN cd /tmp/gdal \
       --with-webp=$PREFIX \
       --with-zstd=$PREFIX \
       --with-crypto \
+      --without-libtool \
+      --with-hide-internal-symbols \
       --with-libtiff=internal \
-      --with-threads \
-      --with-sqlite3 \
+      --with-rename-internal-libtiff-symbols \
+      --with-geotiff=internal \
+      --with-rename-internal-libgeotiff-symbols \
+      --with-sqlite3=$PREFIX \
       --disable-debug \
       --with-hide-internal-symbols=yes \
       --without-bsb \
@@ -118,35 +136,7 @@ RUN cd /tmp/gdal \
       --without-fme \
       --without-freexl \
       --without-gif \
-      --without-gif \
-      --without-gnm \
-      --without-grass \
-      --without-grib \
-      --without-hdf4 \
-      --without-hdf5 \
-      --without-idb \
-      --without-ingres \
-      --without-jasper \
-      --without-jp2mrsid \
-      --without-kakadu \
-      --without-libgrass \
-      --without-libkml \
-      --without-libtool \
-      --without-mrf \
-      --without-mrsid \
-      --without-mysql \
-      --without-netcdf \
-      --without-odbc \
-      --without-ogdi \
-      --without-pcidsk \
-      --without-pcraster \
-      --without-pcre \
-      --without-perl \
-      --without-pg \
-      --without-python \
-      --without-qhull \
-      --without-sde \
-      --without-xml2
+      --enable-lto
 
 RUN cd /tmp/gdal \
   && make -j $(nproc) --silent && make install && make clean \
@@ -167,13 +157,14 @@ RUN mv $PREFIX/lib64/lib* $PREFIX/lib/
 # Set $ORIGIN
 RUN cd $PREFIX/lib/ \
   && patchelf --remove-rpath libgdal.so \
-  && patchelf --force-rpath --set-rpath '$ORIGIN' ./libgdal.so
+  && patchelf --remove-rpath libproj.so \
+  && patchelf --force-rpath --set-rpath '$ORIGIN' ./libgdal.so \
+  && patchelf --force-rpath --set-rpath '$ORIGIN' ./libproj.so
 
 ENV \
   GDAL_DATA=$PREFIX/share/gdal \
   PROJ_LIB=$PREFIX/share/proj \
   GDAL_CONFIG=$PREFIX/bin/gdal-config \
-  GEOS_CONFIG=$PREFIX/bin/geos-config \
-  PATH=$PREFIX/bin:$PATH
+  GEOS_CONFIG=$PREFIX/bin/geos-config
 
 RUN yum clean all
