@@ -75,7 +75,7 @@ ENV \
 RUN mkdir /tmp/proj \
    && curl -sfL http://download.osgeo.org/proj/proj-$PROJ_VERSION.tar.gz | tar zxf - -C /tmp/proj --strip-components=1 \
    && cd /tmp/proj \
-   && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX \
+   && LDFLAGS="-Wl,-rpath,'\$\$ORIGIN'" CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX --disable-static --enable-lto \
    && make -j $(nproc) --silent && make install && make clean \
    && rm -rf /tmp/proj
 
@@ -83,7 +83,7 @@ RUN mkdir /tmp/proj \
 RUN mkdir /tmp/geos \
   && curl -sfL http://download.osgeo.org/geos/geos-$GEOS_VERSION.tar.bz2 | tar jxf - -C /tmp/geos --strip-components=1 \
   && cd /tmp/geos \
-  && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX \
+  && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX --disable-static \
   && make -j $(nproc) --silent && make install && make clean \
   && rm -rf /tmp/geos
 
@@ -98,7 +98,8 @@ RUN mkdir /tmp/gdal \
   && curl -sfL https://github.com/OSGeo/gdal/archive/v${GDAL_VERSION}.tar.gz | tar zxf - -C /tmp/gdal --strip-components=2
 
 RUN cd /tmp/gdal \
-  && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure \
+  && touch config.rpath \
+  && LDFLAGS="-Wl,-rpath,'\$\$ORIGIN'" CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure \
       --prefix=$PREFIX \
       --with-proj=$PREFIX \
       --with-geos=$PREFIX/bin/geos-config \
@@ -109,8 +110,12 @@ RUN cd /tmp/gdal \
       --with-webp=$PREFIX \
       --with-zstd=$PREFIX \
       --with-crypto \
+      --without-libtool \
+      --with-hide-internal-symbols \
       --with-libtiff=internal \
-      --with-threads \
+      --with-rename-internal-libtiff-symbols \
+      --with-geotiff=internal \
+      --with-rename-internal-libgeotiff-symbols \
       --with-sqlite3 \
       --disable-debug \
       --with-hide-internal-symbols=yes \
@@ -120,35 +125,7 @@ RUN cd /tmp/gdal \
       --without-fme \
       --without-freexl \
       --without-gif \
-      --without-gif \
-      --without-gnm \
-      --without-grass \
-      --without-grib \
-      --without-hdf4 \
-      --without-hdf5 \
-      --without-idb \
-      --without-ingres \
-      --without-jasper \
-      --without-jp2mrsid \
-      --without-kakadu \
-      --without-libgrass \
-      --without-libkml \
-      --without-libtool \
-      --without-mrf \
-      --without-mrsid \
-      --without-mysql \
-      --without-netcdf \
-      --without-odbc \
-      --without-ogdi \
-      --without-pcidsk \
-      --without-pcraster \
-      --without-pcre \
-      --without-perl \
-      --without-pg \
-      --without-python \
-      --without-qhull \
-      --without-sde \
-      --without-xml2
+      --enable-lto
 
 RUN cd /tmp/gdal \
   && make -j $(nproc) --silent && make install && make clean \
@@ -163,19 +140,16 @@ RUN mkdir /tmp/patchelf \
   && make -j $(nproc) --silent && make install && make clean \
   && cd / && rm -rf /tmp/patchelf
 
-# # Move /lib64 (libjpeg) to /lib
+# Move /lib64 (libjpeg) to /lib
 RUN mv $PREFIX/lib64/lib* $PREFIX/lib/
 
-# Set $ORIGIN
-RUN cd $PREFIX/lib/ \
-  && patchelf --remove-rpath libgdal.so \
-  && patchelf --force-rpath --set-rpath '$ORIGIN' ./libgdal.so
+# FIX 
+RUN for i in $PREFIX/bin/*; do  patchelf --force-rpath --set-rpath '$ORIGIN/../lib' $i; done
 
 ENV \
   GDAL_DATA=$PREFIX/share/gdal \
   PROJ_LIB=$PREFIX/share/proj \
   GDAL_CONFIG=$PREFIX/bin/gdal-config \
-  GEOS_CONFIG=$PREFIX/bin/geos-config \
-  PATH=$PREFIX/bin:$PATH
+  GEOS_CONFIG=$PREFIX/bin/geos-config
 
 RUN yum clean all
