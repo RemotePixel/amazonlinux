@@ -91,45 +91,93 @@ ENV PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig/
 
 # gdal
 # Use latest commits from Github instead of release
-# release/2.4 is the 2.4 up to date branch
+# "release/2.4" is the up to date 2.4 github branch
 ENV GDAL_VERSION=2.4.3
 
 RUN mkdir /tmp/gdal \
-  && curl -sfL https://github.com/OSGeo/gdal/archive/v${GDAL_VERSION}.tar.gz | tar zxf - -C /tmp/gdal --strip-components=2
+  && curl -sfL https://github.com/OSGeo/gdal/archive/release/2.4.tar.gz | tar zxf - -C /tmp/gdal --strip-components=2
 
 RUN cd /tmp/gdal \
   && touch config.rpath \
   && LDFLAGS="-Wl,-rpath,'\$\$ORIGIN'" CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure \
+      --disable-debug \
+      --enable-lto \
       --prefix=$PREFIX \
-      --with-proj=$PREFIX \
-      --with-geos=$PREFIX/bin/geos-config \
+      --with-crypto \
       --with-curl \
+      --with-expat \
+      --with-hide-internal-symbols=yes \
+      --with-geos=$PREFIX/bin/geos-config \
+      --with-geotiff=internal --with-rename-internal-libgeotiff-symbols \
+      --with-jpeg=$PREFIX \
+      --with-libtiff=internal --with-rename-internal-libtiff-symbols \
       --with-openjpeg \
       --with-png \
-      --with-jpeg=$PREFIX \
+      --with-proj=$PREFIX \
+      --with-sqlite3 \
+      --with-xml2 \
       --with-webp=$PREFIX \
       --with-zstd=$PREFIX \
-      --with-crypto \
-      --without-libtool \
-      --with-hide-internal-symbols \
-      --with-libtiff=internal \
-      --with-rename-internal-libtiff-symbols \
-      --with-geotiff=internal \
-      --with-rename-internal-libgeotiff-symbols \
-      --with-sqlite3 \
-      --disable-debug \
-      --with-hide-internal-symbols=yes \
       --without-bsb \
       --without-cfitsio \
       --without-ecw \
       --without-fme \
       --without-freexl \
+      --without-jpeg12 \
       --without-gif \
-      --enable-lto
+      --without-gnm \
+      --without-lerc \
+      --without-libtool \      
+      --without-pcraster \
+      --without-pcidsk
 
 RUN cd /tmp/gdal \
   && make -j $(nproc) --silent && make install && make clean \
-  && rm -rf /tmp/gdal
+  && rm -rf /tmp/gdal \
+  && (for i in \
+          # BAG driver
+          $PREFIX/share/gdal/bag*.xml \
+          # SXF driver
+          $PREFIX/share/gdal/default.rsc \
+          # unused
+          $PREFIX/share/gdal/*.svg \
+          # unused
+          $PREFIX/share/gdal/*.png \
+          # NITF driver
+          $PREFIX/share/gdal/nitf* \
+          # NITF driver
+          $PREFIX/share/gdal/gt_datum.csv \
+          # NITF driver
+          $PREFIX/share/gdal/gt_ellips.csv \
+          # PDF driver
+          $PREFIX/share/gdal/pdf* \
+          # PDS4 driver
+          $PREFIX/share/gdal/pds* \
+          # S57 driver
+          $PREFIX/share/gdal/s57* \
+          # VDV driver
+          $PREFIX/share/gdal/vdv* \
+          # DXF driver
+          $PREFIX/share/gdal/*.dxf \
+          # DGN driver
+          $PREFIX/share/gdal/*.dgn \
+          # OSM driver
+          $PREFIX/share/gdal/osm* \
+          # GMLAS driver
+          $PREFIX/share/gdal/gmlas* \
+          # PLScenes driver
+          $PREFIX/share/gdal/plscenes* \
+          # netCDF driver
+          $PREFIX/share/gdal/netcdf_config.xsd \
+          # PCIDSK driver
+          $PREFIX/share/gdal/pci* \
+          # ECW and ERS drivers
+          $PREFIX/share/gdal/ecw_cs.wkt \
+          # EEDA driver
+          $PREFIX/share/gdal/eedaconf.json \
+          # MAP driver / ImportFromOZI()
+          $PREFIX/share/gdal/ozi_* \
+      ;do rm $i; done)
 
 # from https://github.com/pypa/manylinux/blob/d8ef5d47433ba771fa4403fd48f352c586e06e43/docker/build_scripts/build.sh#L133-L138
 # Install patchelf (latest with unreleased bug fixes)
