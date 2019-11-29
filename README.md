@@ -8,8 +8,8 @@ Inspired from [developmentseed/geolambda](https://github.com/developmentseed/geo
 
 ## Dockers images
 ### GDAL Versions - Based on lambci/lambda-base:build
-  - 3.0.2 (16 Nov. 2019) / **remotepixel/amazonlinux:gdal3.0** 
-  - 2.4.3 (16 Nov. 2019) / **remotepixel/amazonlinux:gdal2.4**
+  - 3.0.2 (29 Nov. 2019) / **remotepixel/amazonlinux:gdal3.0** 
+  - 2.4.3 (29 Nov. 2019) / **remotepixel/amazonlinux:gdal2.4**
 
 ### Python - Based on lambci/lambda:build-python*
 
@@ -45,13 +45,11 @@ Note: The `Layers` docker image are usefull when you want to create lambda packa
   
   **arn:aws:lambda:{REGION}:524387336408:layer:gdal${version}-py${version}-geo:{version}**
 
-  Layer Version:
-  - gdal3.0: **3**
-  - gdal2.4: **2**
+  [Full list of version and ARN](https://github.com/RemotePixel/amazonlinux/blob/master/arns.json)
 
   Layer Size:
-  - gdal3.0: **34.7Mb** (111.5Mb)
-  - gdal2.4: **33Mb** (108.9Mb)
+  - gdal3.0: **40.5Mb** (117Mb)
+  - gdal2.4: **34.7Mb** (116.8Mb)
 
 
 #### Regions
@@ -78,6 +76,7 @@ Note: The `Layers` docker image are usefull when you want to create lambda packa
 
 ```
 $ gdalinfo --formats
+Supported Formats:
   VRT -raster- (rw+v): Virtual Raster
   DERIVED -raster- (ro): Derived datasets using VRT pixel functions
   GTiff -raster- (rw+vs): GeoTIFF
@@ -207,6 +206,80 @@ $ gdalinfo --formats
   ENVI -raster- (rw+v): ENVI .hdr Labelled
   EHdr -raster- (rw+v): ESRI .hdr Labelled
   ISCE -raster- (rw+v): ISCE raster
+  HTTP -raster,vector- (ro): HTTP Fetching Wrapper
+
+$ ogrinfo --formats
+Supported Formats:
+  PDS4 -raster,vector- (rw+vs): NASA Planetary Data System 4
+  JP2OpenJPEG -raster,vector- (rwv): JPEG-2000 driver based on OpenJPEG library
+  PDF -raster,vector- (w+): Geospatial PDF
+  MBTiles -raster,vector- (rw+v): MBTiles
+  EEDA -vector- (ro): Earth Engine Data API
+  ESRI Shapefile -vector- (rw+v): ESRI Shapefile
+  MapInfo File -vector- (rw+v): MapInfo File
+  UK .NTF -vector- (rov): UK .NTF
+  OGR_SDTS -vector- (rov): SDTS
+  S57 -vector- (rw+v): IHO S-57 (ENC)
+  DGN -vector- (rw+v): Microstation DGN
+  OGR_VRT -vector- (rov): VRT - Virtual Datasource
+  REC -vector- (ro): EPIInfo .REC 
+  Memory -vector- (rw+): Memory
+  BNA -vector- (rw+v): Atlas BNA
+  CSV -vector- (rw+v): Comma Separated Value (.csv)
+  GML -vector- (rw+v): Geography Markup Language (GML)
+  GPX -vector- (rw+v): GPX
+  KML -vector- (rw+v): Keyhole Markup Language (KML)
+  GeoJSON -vector- (rw+v): GeoJSON
+  GeoJSONSeq -vector- (rw+v): GeoJSON Sequence
+  ESRIJSON -vector- (rov): ESRIJSON
+  TopoJSON -vector- (rov): TopoJSON
+  OGR_GMT -vector- (rw+v): GMT ASCII Vectors (.gmt)
+  GPKG -raster,vector- (rw+vs): GeoPackage
+  SQLite -vector- (rw+v): SQLite / Spatialite
+  WAsP -vector- (rw+v): WAsP .map format
+  OpenFileGDB -vector- (rov): ESRI FileGDB
+  XPlane -vector- (rov): X-Plane/Flightgear aeronautical data
+  DXF -vector- (rw+v): AutoCAD DXF
+  CAD -raster,vector- (rovs): AutoCAD Driver
+  Geoconcept -vector- (rw+v): Geoconcept
+  GeoRSS -vector- (rw+v): GeoRSS
+  GPSTrackMaker -vector- (rw+v): GPSTrackMaker
+  VFK -vector- (ro): Czech Cadastral Exchange Data Format
+  PGDUMP -vector- (w+v): PostgreSQL SQL dump
+  OSM -vector- (rov): OpenStreetMap XML and PBF
+  GPSBabel -vector- (rw+): GPSBabel
+  SUA -vector- (rov): Tim Newport-Peace's Special Use Airspace Format
+  OpenAir -vector- (rov): OpenAir
+  OGR_PDS -vector- (rov): Planetary Data Systems TABLE
+  WFS -vector- (rov): OGC WFS (Web Feature Service)
+  WFS3 -vector- (ro): OGC WFS 3 client (Web Feature Service)
+  HTF -vector- (rov): Hydrographic Transfer Vector
+  AeronavFAA -vector- (rov): Aeronav FAA
+  EDIGEO -vector- (rov): French EDIGEO exchange format
+  GFT -vector- (rw+): Google Fusion Tables
+  SVG -vector- (rov): Scalable Vector Graphics
+  CouchDB -vector- (rw+): CouchDB / GeoCouch
+  Cloudant -vector- (rw+): Cloudant / CouchDB
+  Idrisi -vector- (rov): Idrisi Vector (.vct)
+  ARCGEN -vector- (rov): Arc/Info Generate
+  SEGUKOOA -vector- (rov): SEG-P1 / UKOOA P1/90
+  SEGY -vector- (rov): SEG-Y
+  ODS -vector- (rw+v): Open Document/ LibreOffice / OpenOffice Spreadsheet 
+  XLSX -vector- (rw+v): MS Office Open XML spreadsheet
+  ElasticSearch -vector- (rw+): Elastic Search
+  Carto -vector- (rw+): Carto
+  AmigoCloud -vector- (rw+): AmigoCloud
+  SXF -vector- (rov): Storage and eXchange Format
+  Selafin -vector- (rw+v): Selafin
+  JML -vector- (rw+v): OpenJUMP JML
+  PLSCENES -raster,vector- (ro): Planet Labs Scenes API
+  CSW -vector- (ro): OGC CSW (Catalog  Service for the Web)
+  VDV -vector- (rw+v): VDV-451/VDV-452/INTREST Data Format
+  MVT -vector- (rw+v): Mapbox Vector Tiles
+  TIGER -vector- (rw+v): U.S. Census TIGER/Line
+  AVCBin -vector- (rov): Arc/Info Binary Coverage
+  AVCE00 -vector- (rov): Arc/Info E00 (ASCII) Coverage
+  NGW -raster,vector- (rw+s): NextGIS Web
   HTTP -raster,vector- (ro): HTTP Fetching Wrapper
 ```
 

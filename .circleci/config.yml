@@ -19,7 +19,7 @@ common: &common
               --volume $(pwd)/:/local \
               --env GDALVERSION=${GDAL_VERSION} \
               -itd remotepixel/amazonlinux:gdal${GDAL_VERSION} bash
-          test=$(docker exec -it lambda bash -c '/local/scripts/tests.sh')
+          test=$(docker exec -it lambda bash -c 'cd /local/tests && sh tests.sh')
           docker stop lambda
           docker rm lambda
           if [[ "$test" =~ "OK" ]]; then echo "PASSED"; else exit 1; fi

@@ -66,16 +66,30 @@ RUN mkdir /tmp/zstd \
   && make -j $(nproc) PREFIX=$PREFIX ZSTD_LEGACY_SUPPORT=0 CFLAGS=-O1 --silent && make install PREFIX=$PREFIX ZSTD_LEGACY_SUPPORT=0 CFLAGS=-O1 && make clean \
   && rm -rf /tmp/zstd
 
+RUN mkdir /tmp/sqlite \
+  && curl -sfL https://www.sqlite.org/2019/sqlite-autoconf-3300100.tar.gz  | tar zxf - -C /tmp/sqlite --strip-components=1 \
+  && cd /tmp/sqlite \
+  && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX --disable-static \
+  && make -j $(nproc) --silent && make install && make clean \
+  && rm -rf /tmp/sqlite
+
 # OSGEO
 ENV \
   GEOS_VERSION=3.7.2 \
   PROJ_VERSION=6.2.1
 
+ENV \
+  SQLITE3_LIBS="-L${PREFIX}/lib -lsqlite3" \
+  SQLITE3_INCLUDE_DIR="${PREFIX}/include" \
+  SQLITE3_CFLAGS="$CFLAGS -I${PREFIX}/include" \
+  PATH=${PREFIX}/bin/:$PATH
+
 # proj
 RUN mkdir /tmp/proj \
    && curl -sfL http://download.osgeo.org/proj/proj-$PROJ_VERSION.tar.gz | tar zxf - -C /tmp/proj --strip-components=1 \
+   && curl -sfL http://download.osgeo.org/proj/proj-datumgrid-latest.tar.gz | tar zxf - -C /tmp/proj/data \
    && cd /tmp/proj \
-   && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX \
+   && LDFLAGS="-Wl,-rpath,'\$\$ORIGIN'" CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX --disable-static --enable-lto \
    && make -j $(nproc) --silent && make install && make clean \
    && rm -rf /tmp/proj
 
@@ -83,74 +97,57 @@ RUN mkdir /tmp/proj \
 RUN mkdir /tmp/geos \
   && curl -sfL http://download.osgeo.org/geos/geos-$GEOS_VERSION.tar.bz2 | tar jxf - -C /tmp/geos --strip-components=1 \
   && cd /tmp/geos \
-  && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX \
+  && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX --disable-static \
   && make -j $(nproc) --silent && make install && make clean \
   && rm -rf /tmp/geos
 
 ENV PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig/
 
 # gdal
+# Use latest commits from Github instead of release
+# "release/3.0.2" is the up to date 3.0.2 github branch
 ENV GDAL_VERSION=3.0.2
 
 RUN mkdir /tmp/gdal \
   && curl -sfL https://github.com/OSGeo/gdal/archive/v${GDAL_VERSION}.tar.gz | tar zxf - -C /tmp/gdal --strip-components=2
 
 RUN cd /tmp/gdal \
-  && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure \
+  && touch config.rpath \
+  && LDFLAGS="-Wl,-rpath,'\$\$ORIGIN'" CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure \
+      --disable-debug \
+      --enable-lto \
       --prefix=$PREFIX \
-      --with-proj=$PREFIX \
-      --with-geos=$PREFIX/bin/geos-config \
+      --with-crypto \
       --with-curl \
+      --with-expat \
+      --with-hide-internal-symbols=yes \
+      --with-geos=$PREFIX/bin/geos-config \
+      --with-geotiff=internal --with-rename-internal-libgeotiff-symbols \
+      --with-jpeg=$PREFIX \
+      --with-libtiff=internal --with-rename-internal-libtiff-symbols \
       --with-openjpeg \
       --with-png \
-      --with-jpeg=$PREFIX \
+      --with-proj=$PREFIX \
+      --with-sqlite3=$PREFIX \
+      --with-xml2 \
       --with-webp=$PREFIX \
       --with-zstd=$PREFIX \
-      --with-crypto \
-      --with-libtiff=internal \
-      --with-threads \
-      --with-sqlite3 \
-      --disable-debug \
-      --with-hide-internal-symbols=yes \
       --without-bsb \
       --without-cfitsio \
       --without-ecw \
       --without-fme \
       --without-freexl \
-      --without-gif \
+      --without-jpeg12 \
       --without-gif \
       --without-gnm \
-      --without-grass \
-      --without-grib \
-      --without-hdf4 \
-      --without-hdf5 \
-      --without-idb \
-      --without-ingres \
-      --without-jasper \
-      --without-jp2mrsid \
-      --without-kakadu \
-      --without-libgrass \
-      --without-libkml \
-      --without-libtool \
-      --without-mrf \
-      --without-mrsid \
-      --without-mysql \
-      --without-netcdf \
-      --without-odbc \
-      --without-ogdi \
-      --without-pcidsk \
+      --without-lerc \
+      --without-libtool \      
       --without-pcraster \
-      --without-pcre \
-      --without-perl \
-      --without-pg \
-      --without-python \
-      --without-qhull \
-      --without-sde \
-      --without-xml2
+      --without-pcidsk
 
 RUN cd /tmp/gdal \
   && make -j $(nproc) --silent && make install && make clean \
-  && rm -rf /tmp/gdal
+  && rm -rf /tmp/gdal 
 
 # from https://github.com/pypa/manylinux/blob/d8ef5d47433ba771fa4403fd48f352c586e06e43/docker/build_scripts/build.sh#L133-L138
 # Install patchelf (latest with unreleased bug fixes)
@@ -161,19 +158,16 @@ RUN mkdir /tmp/patchelf \
   && make -j $(nproc) --silent && make install && make clean \
   && cd / && rm -rf /tmp/patchelf
 
-# # Move /lib64 (libjpeg) to /lib
+# Move /lib64 (libjpeg) to /lib
 RUN mv $PREFIX/lib64/lib* $PREFIX/lib/
 
-# Set $ORIGIN
-RUN cd $PREFIX/lib/ \
-  && patchelf --remove-rpath libgdal.so \
-  && patchelf --force-rpath --set-rpath '$ORIGIN' ./libgdal.so
+# FIX 
+RUN for i in $PREFIX/bin/*; do  patchelf --force-rpath --set-rpath '$ORIGIN/../lib' $i; done
 
 ENV \
   GDAL_DATA=$PREFIX/share/gdal \
   PROJ_LIB=$PREFIX/share/proj \
   GDAL_CONFIG=$PREFIX/bin/gdal-config \
-  GEOS_CONFIG=$PREFIX/bin/geos-config \
-  PATH=$PREFIX/bin:$PATH
+  GEOS_CONFIG=$PREFIX/bin/geos-config
 
 RUN yum clean all
