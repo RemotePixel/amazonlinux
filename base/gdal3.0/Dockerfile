@@ -89,7 +89,7 @@ RUN mkdir /tmp/proj \
    && curl -sfL http://download.osgeo.org/proj/proj-$PROJ_VERSION.tar.gz | tar zxf - -C /tmp/proj --strip-components=1 \
    && curl -sfL http://download.osgeo.org/proj/proj-datumgrid-latest.tar.gz | tar zxf - -C /tmp/proj/data \
    && cd /tmp/proj \
-   && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX --disable-static --enable-lto \
+   && LDFLAGS="-Wl,-rpath,'\$\$ORIGIN'" CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX --disable-static --enable-lto \
    && make -j $(nproc) --silent && make install && make clean \
    && rm -rf /tmp/proj
 
@@ -110,7 +110,8 @@ RUN mkdir /tmp/gdal \
   && curl -sfL https://github.com/OSGeo/gdal/archive/v${GDAL_VERSION}.tar.gz | tar zxf - -C /tmp/gdal --strip-components=2
 
 RUN cd /tmp/gdal \
-  && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure \
+  && touch config.rpath \
+  && LDFLAGS="-Wl,-rpath,'\$\$ORIGIN'" CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure \
       --prefix=$PREFIX \
       --with-proj=$PREFIX \
       --with-geos=$PREFIX/bin/geos-config \
@@ -151,15 +152,11 @@ RUN mkdir /tmp/patchelf \
   && make -j $(nproc) --silent && make install && make clean \
   && cd / && rm -rf /tmp/patchelf
 
-# # Move /lib64 (libjpeg) to /lib
+# Move /lib64 (libjpeg) to /lib
 RUN mv $PREFIX/lib64/lib* $PREFIX/lib/
 
-# Set $ORIGIN
-RUN cd $PREFIX/lib/ \
-  && patchelf --remove-rpath libgdal.so \
-  && patchelf --remove-rpath libproj.so \
-  && patchelf --force-rpath --set-rpath '$ORIGIN' ./libgdal.so \
-  && patchelf --force-rpath --set-rpath '$ORIGIN' ./libproj.so
+# FIX 
+RUN for i in $PREFIX/bin/*; do  patchelf --force-rpath --set-rpath '$ORIGIN/../lib' $i; done
 
 ENV \
   GDAL_DATA=$PREFIX/share/gdal \
