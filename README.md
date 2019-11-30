@@ -47,6 +47,10 @@ Note: The `Layers` docker image are usefull when you want to create lambda packa
 
   [Full list of version and ARN](https://github.com/RemotePixel/amazonlinux/blob/master/arns.json)
 
+  Layer versions:
+  - gdal3.0: **5**
+  - gdal2.4: **5**
+
   Layer Size:
   - gdal3.0: **40.5Mb** (117Mb)
   - gdal2.4: **34.7Mb** (116.8Mb)
@@ -428,8 +432,8 @@ package.zip
 ```
 
 ##### Lambda config
-- **GDAL_DATA:** /var/task/share/gdal or /opt/share/gdal
-- **PROJ_LIB:** /var/task/share/proj or /opt/share/proj
+- **GDAL_DATA:** /opt/share/gdal
+- **PROJ_LIB:** /opt/share/proj
 
 
 # Other variable for optimal config
