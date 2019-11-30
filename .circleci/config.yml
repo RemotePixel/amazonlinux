@@ -123,7 +123,7 @@ jobs:
           at: ~/amazonlinux
       - run:
           name: install boto3
-          command: sudo pip install boto3
+          command: sudo pip install boto3 click
       - run:
           name: Deploy Layer
           command: |
