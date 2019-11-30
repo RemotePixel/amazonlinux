@@ -122,16 +122,14 @@ jobs:
       - attach_workspace:
           at: ~/amazonlinux
       - run:
-          name: install cmd
-          command: |
-            sudo apt-get install jq
-            sudo pip install awscli
+          name: install boto3
+          command: sudo pip install boto3
       - run:
           name: Deploy Layer
           command: |
             for GDAL_VERSION in ${GDAL_VERSIONS}; do
               for PYTHON_VERSION in ${PYTHON_VERSIONS}; do
-                ./scripts/deploy-layer.sh "geo" $GDAL_VERSION $PYTHON_VERSION
+                python scripts/deploy-layer.py $GDAL_VERSION $PYTHON_VERSION geo
               done
             done
 
