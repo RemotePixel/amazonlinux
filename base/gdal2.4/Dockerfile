@@ -72,7 +72,7 @@ ENV \
   PROJ_VERSION=5.2.0
 
 # proj
-RUN mkdir /tmp/proj \
+RUN mkdir /tmp/proj && mkdir /tmp/proj/data \
    && curl -sfL http://download.osgeo.org/proj/proj-$PROJ_VERSION.tar.gz | tar zxf - -C /tmp/proj --strip-components=1 \
    && curl -sfL http://download.osgeo.org/proj/proj-datumgrid-latest.tar.gz | tar zxf - -C /tmp/proj/data \
    && cd /tmp/proj \
