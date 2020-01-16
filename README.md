@@ -49,12 +49,12 @@ Note: The `Layers` docker image are usefull when you want to create lambda packa
   [Full list of version and ARN](https://github.com/RemotePixel/amazonlinux/blob/master/arns.json)
 
   Layer versions:
-  - gdal3.0: **5**
-  - gdal2.4: **5**
+  - gdal3.0: **7**
+  - gdal2.4: **8**
 
   Layer Size:
-  - gdal3.0: **40.5Mb** (117Mb)
-  - gdal2.4: **34.7Mb** (116.8Mb)
+  - gdal3.0: **46.4Mb** (136.9Mb)
+  - gdal2.4: **37.7Mb** (126.2Mb)
 
 
 #### Regions
@@ -116,6 +116,10 @@ Supported Formats:
   SRTMHGT -raster- (rwv): SRTMHGT File Format
   Leveller -raster- (rw+v): Leveller heightfield
   Terragen -raster- (rw+v): Terragen heightfield
+  GMT -raster- (rw): GMT NetCDF Grid Format
+  netCDF -raster,vector- (rw+vs): Network Common Data Format
+  HDF4 -raster- (ros): Hierarchical Data Format Release 4
+  HDF4Image -raster- (rw+): HDF4 Dataset
   ISIS3 -raster- (rw+v): USGS Astrogeology ISIS cube (Version 3)
   ISIS2 -raster- (rw+v): USGS Astrogeology ISIS cube (Version 2)
   PDS -raster- (rov): NASA Planetary Data System
@@ -183,11 +187,15 @@ Supported Formats:
   RIK -raster- (rov): Swedish Grid RIK (.rik)
   USGSDEM -raster- (rwv): USGS Optional ASCII DEM (and CDED)
   GXF -raster- (rov): GeoSoft Grid Exchange Format
+  BAG -raster- (rwv): Bathymetry Attributed Grid
+  HDF5 -raster- (rovs): Hierarchical Data Format Release 5
+  HDF5Image -raster- (rov): HDF5 Dataset
   NWT_GRD -raster- (rw+v): Northwood Numeric Grid Format .grd/.tab
   NWT_GRC -raster- (rov): Northwood Classified Grid Format .grc/.tab
   ADRG -raster- (rw+vs): ARC Digitized Raster Graphics
   SRP -raster- (rovs): Standard Raster Product (ASRP/USRP)
   BLX -raster- (rwv): Magellan topo (.blx)
+  PostGISRaster -raster- (rws): PostGIS Raster driver
   SAGA -raster- (rw+v): SAGA GIS Binary Grid (.sdat, .sg-grd-z)
   IGNFHeightASCIIGrid -raster- (rov): IGN France height correction ASCII Grid
   XYZ -raster- (rwv): ASCII Gridded XYZ
@@ -213,8 +221,9 @@ Supported Formats:
   ISCE -raster- (rw+v): ISCE raster
   HTTP -raster,vector- (ro): HTTP Fetching Wrapper
 
-$ ogrinfo --formats
+$ ogr2ogr --formats
 Supported Formats:
+  netCDF -raster,vector- (rw+vs): Network Common Data Format
   PDS4 -raster,vector- (rw+vs): NASA Planetary Data System 4
   JP2OpenJPEG -raster,vector- (rwv): JPEG-2000 driver based on OpenJPEG library
   PDF -raster,vector- (w+): Geospatial PDF
@@ -242,6 +251,7 @@ Supported Formats:
   GPKG -raster,vector- (rw+vs): GeoPackage
   SQLite -vector- (rw+v): SQLite / Spatialite
   WAsP -vector- (rw+v): WAsP .map format
+  PostgreSQL -vector- (rw+): PostgreSQL/PostGIS
   OpenFileGDB -vector- (rov): ESRI FileGDB
   XPlane -vector- (rov): X-Plane/Flightgear aeronautical data
   DXF -vector- (rw+v): AutoCAD DXF
