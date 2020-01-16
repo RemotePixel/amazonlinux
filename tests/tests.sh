@@ -11,7 +11,11 @@ if [[ ! "$(gdal-config --formats | grep 'mbtiles')" ]]; then echo "NOK" && exit 
 if [[ ! "$(gdal-config --formats | grep 'webp')" ]]; then echo "NOK" && exit 1; fi
 if [[ ! "$(gdal-config --formats | grep 'jpeg')" ]]; then echo "NOK" && exit 1; fi
 if [[ ! "$(gdal-config --formats | grep 'png')" ]]; then echo "NOK" && exit 1; fi
+if [[ ! "$(gdal-config --formats | grep 'netcdf')" ]]; then echo "NOK" && exit 1; fi
+if [[ ! "$(gdal-config --formats | grep 'hdf5')" ]]; then echo "NOK" && exit 1; fi
+if [[ ! "$(gdal-config --formats | grep 'hdf4')" ]]; then echo "NOK" && exit 1; fi
 if [[ ! "$(ogrinfo --formats | grep 'GML')" ]]; then echo "NOK" && exit 1; fi
+if [[ ! "$(ogrinfo --formats | grep 'PostgreSQL')" ]]; then echo "NOK" && exit 1; fi
 
 if [[ ! "echo ${version} | grep 2.4.)" ]]; then
     if [[ ! "$(ldd $PREFIX/bin/gdalwarp | grep '/opt/bin/../lib/libsqlite3')" ]]; then echo "NOK" && exit 1; fi

@@ -8,8 +8,8 @@ Inspired from [developmentseed/geolambda](https://github.com/developmentseed/geo
 
 ## Dockers images
 ### GDAL Versions - Based on lambci/lambda-base:build
-  - 3.0.2 (6 Dec. 2019) / **remotepixel/amazonlinux:gdal3.0** 
-  - 2.4.3 (6 Dec. 2019) / **remotepixel/amazonlinux:gdal2.4**
+  - 3.0.3 (16 Jan. 2020) / **remotepixel/amazonlinux:gdal3.0** 
+  - 2.4.4 (16 Jan. 2020) / **remotepixel/amazonlinux:gdal2.4**
 
 ### Python - Based on lambci/lambda:build-python*
 
@@ -40,6 +40,7 @@ Note: The `Layers` docker image are usefull when you want to create lambda packa
   - shapely
   - numpy
   - GDAL
+  - pygeos
 
   ARN:
   

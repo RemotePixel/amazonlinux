@@ -11,12 +11,19 @@ WORKDIR /opt
 
 # versions of packages
 ENV \
+  HDF4_VERSION=4.2.14 \
+	HDF5_VERSION=1.10.5 \
+  NETCDF_VERSION=4.6.3 \
   LIBPNG_VERSION=1.6.36 \
   LIBJPEG_TURBO_VERSION=2.0.1 \
   OPENJPEG_VERSION=2.3.1 \
+  PG_VERSION=12.1 \
   PKGCONFIG_VERSION=0.29.2 \
+  SZIP_VERSION=2.1.1 \
   WEBP_VERSION=1.0.2 \
   ZSTD_VERSION=1.4.0
+
+ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/$PREFIX/lib:/$PREFIX/lib64
 
 # pkg-config
 RUN mkdir /tmp/pkg-config \
@@ -66,12 +73,71 @@ RUN mkdir /tmp/zstd \
   && make -j $(nproc) PREFIX=$PREFIX ZSTD_LEGACY_SUPPORT=0 CFLAGS=-O1 --silent && make install PREFIX=$PREFIX ZSTD_LEGACY_SUPPORT=0 CFLAGS=-O1 && make clean \
   && rm -rf /tmp/zstd
 
+# szip (for hdf)
+RUN mkdir /tmp/szip \
+    && curl -sfL https://support.hdfgroup.org/ftp/lib-external/szip/$SZIP_VERSION/src/szip-$SZIP_VERSION.tar.gz | tar zxf - -C /tmp/szip --strip-components=1 \
+    && cd /tmp/szip \
+    && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX --disable-static \
+    && make -j $(nproc) --silent && make install && make clean \
+    && rm -rf /tmp/szip
+
+# libhdf4
+RUN mkdir /tmp/hdf4 \
+    && curl -sfL https://support.hdfgroup.org/ftp/HDF/releases/HDF$HDF4_VERSION/src/hdf-$HDF4_VERSION.tar | tar xvf - -C /tmp/hdf4 --strip-components=1 \
+    && cd /tmp/hdf4 \
+    && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure \
+        --prefix=$PREFIX \
+        --with-szlib=$PREFIX \
+        --enable-shared \
+        --disable-static \
+        --disable-netcdf \
+        --disable-fortran \
+    && make -j $(nproc) --silent && make install && make clean \
+    && rm -rf /tmp/hdf4
+
+# libhdf5
+RUN mkdir /tmp/hdf5 \
+    && curl -sfL https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-${HDF5_VERSION%.*}/hdf5-${HDF5_VERSION}/src/hdf5-$HDF5_VERSION.tar.gz | tar zxf - -C /tmp/hdf5 --strip-components=1 \
+    && cd /tmp/hdf5 \
+    && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure \
+        --prefix=$PREFIX \
+        --with-szlib=$PREFIX \
+        --enable-cxx \
+        --enable-thread-safe \
+        --disable-static \
+    && make -j $(nproc) --silent && make install && make clean \
+    && rm -rf /tmp/hdf5
+
+# NetCDF
+RUN mkdir /tmp/netcdf \
+    && curl -sfL https://github.com/Unidata/netcdf-c/archive/v$NETCDF_VERSION.tar.gz | tar zxf - -C /tmp/netcdf --strip-components=1 \
+    && cd /tmp/netcdf \
+    && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" CPPFLAGS="-I${PREFIX}/include" LDFLAGS="-L${PREFIX}/lib" ./configure \
+        --with-default-chunk-size=67108864 \
+        --with-chunk-cache-size=67108864 \
+        --prefix=$PREFIX \
+        --disable-static \
+        --enable-netcdf4 \
+        --enable-dap \
+        --with-pic \
+    && make -j $(nproc) --silent && make install && make clean \
+    && rm -rf /tmp/netcdf
+
+# sqlite
 RUN mkdir /tmp/sqlite \
   && curl -sfL https://www.sqlite.org/2019/sqlite-autoconf-3300100.tar.gz  | tar zxf - -C /tmp/sqlite --strip-components=1 \
   && cd /tmp/sqlite \
   && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX --disable-static \
   && make -j $(nproc) --silent && make install && make clean \
   && rm -rf /tmp/sqlite
+
+# postgres
+RUN mkdir /tmp/postgres \
+  && curl -sfL https://ftp.postgresql.org/pub/source/v${PG_VERSION}/postgresql-${PG_VERSION}.tar.gz  | tar zxf - -C /tmp/postgres --strip-components=1 \
+  && cd /tmp/postgres \
+  && CFLAGS="-O2 -Wl,-S" CXXFLAGS="-O2 -Wl,-S" ./configure --prefix=$PREFIX --with-openssl \
+  && make -j $(nproc) --silent && make install && make clean \
+  && rm -rf /tmp/postgres
 
 # OSGEO
 ENV \
@@ -105,11 +171,10 @@ ENV PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig/
 
 # gdal
 # Use latest commits from Github instead of release
-# "release/3.0.2" is the up to date 3.0.2 github branch
-ENV GDAL_VERSION=3.0.2
-
+# "release/3.0" is the up to date 3.0.2 github branch
+ENV GDAL_VERSION=3.0.3
 RUN mkdir /tmp/gdal \
-  && curl -sfL https://github.com/OSGeo/gdal/archive/v${GDAL_VERSION}.tar.gz | tar zxf - -C /tmp/gdal --strip-components=2
+  && curl -sfL https://github.com/OSGeo/gdal/archive/release/3.0.tar.gz | tar zxf - -C /tmp/gdal --strip-components=2
 
 RUN cd /tmp/gdal \
   && touch config.rpath \
@@ -120,12 +185,18 @@ RUN cd /tmp/gdal \
       --with-crypto \
       --with-curl \
       --with-expat \
+      --with-hdf4=$PREFIX \
+      --with-hdf5=$PREFIX \
       --with-hide-internal-symbols=yes \
       --with-geos=$PREFIX/bin/geos-config \
-      --with-geotiff=internal --with-rename-internal-libgeotiff-symbols \
+      --with-geotiff=internal \
+      --with-rename-internal-libgeotiff-symbols \
       --with-jpeg=$PREFIX \
-      --with-libtiff=internal --with-rename-internal-libtiff-symbols \
+      --with-libtiff=internal \
+      --with-rename-internal-libtiff-symbols \
+      --with-netcdf=$PREFIX \
       --with-openjpeg \
+      --with-pg=yes \
       --with-png \
       --with-proj=$PREFIX \
       --with-sqlite3=$PREFIX \

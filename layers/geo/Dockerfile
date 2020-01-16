@@ -10,6 +10,7 @@ RUN pip install \
     rasterio \
     shapely \
     numpy \
+    pygeos \
     GDAL~=$(gdal-config --version) \
     --no-binary :all: -t $PREFIX/python
 
