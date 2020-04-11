@@ -1,5 +1,8 @@
 # amazonlinux
 
+:warning: This now lives in https://github.com/lambgeo/docker-lambda
+
+
 [![CircleCI](https://circleci.com/gh/RemotePixel/amazonlinux.svg?style=svg)](https://circleci.com/gh/RemotePixel/amazonlinux)
 
 Create an **AWS lambda** like docker images and lambda layer with python 3 and GDAL.
@@ -20,60 +23,6 @@ Inspired from [developmentseed/geolambda](https://github.com/developmentseed/geo
   - **remotepixel/amazonlinux:gdal2.4-py3.7**
 
 Content: GDAL Libs and python with numpy and cython
-
-### Layers*
-
-- **3.0**
-  - **remotepixel/amazonlinux:gdal3.0-py3.7-geo**
-
-- **2.4**
-  - **remotepixel/amazonlinux:gdal2.4-py3.7-geo**
-
-Content: base + rasterio, gdal and shapely
-
-Note: The `Layers` docker image are usefull when you want to create lambda package to be used in addition to the lambda layer. 
-
-## Lambda Layers
-
-- **gdal${version}-py${version}-geo**
-  - rasterio
-  - shapely
-  - numpy
-  - GDAL
-  - pygeos
-
-  ARN:
-  
-  **arn:aws:lambda:{REGION}:524387336408:layer:gdal${version}-py${version}-geo:{version}**
-
-  [Full list of version and ARN](https://github.com/RemotePixel/amazonlinux/blob/master/arns.json)
-
-  Layer versions:
-  - gdal3.0: **7**
-  - gdal2.4: **8**
-
-  Layer Size:
-  - gdal3.0: **46.4Mb** (136.9Mb)
-  - gdal2.4: **37.7Mb** (126.2Mb)
-
-
-#### Regions
-- ap-northeast-1
-- ap-northeast-2
-- ap-south-1 
-- ap-southeast-1
-- ap-southeast-2
-- ca-central-1
-- eu-central-1
-- eu-north-1
-- eu-west-1
-- eu-west-2
-- eu-west-3
-- sa-east-1
-- us-east-1
-- us-east-2
-- us-west-1
-- us-west-2
 
 ### Available drivers
 
