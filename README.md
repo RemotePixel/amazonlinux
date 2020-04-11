@@ -317,42 +317,6 @@ package/
   |___ mercantile/
 ```
 
-Let's use `-geo` layer
-
-```Dockerfile
-FROM remotepixel/amazonlinux:gdal3.0-py3.7-geo
-
-# Basically we don't want to replicated existant modules found in the layer ($PYTHONPATH)
-# So we use the $PYTHONUSERBASE trick to set the output directory
-ENV PYTHONUSERBASE=/var/task
-
-# Create a package
-COPY handler.py $PYTHONUSERBASE/handler.py
-RUN pip install --user mercantile 
-```
-- layer.sh
-```bash
-# We move all the package to the root directory
-version=$(python -c 'import sys; print(f"{sys.version_info[0]}.{sys.version_info[1]}")')
-PYPATH=${PYTHONUSERBASE}/lib/python${version}/site-packages/
-mv ${PYPATH}/* ${PYTHONUSERBASE}/
-rm -rf ${PYTHONUSERBASE}/lib
-
-echo "Create archive"
-cd $PYTHONUSERBASE && zip -r9q /tmp/layer.zip *
-
-cp /tmp/layer.zip /local/layer.zip
-```
-- commands
-```bash
-docker build --tag package:latest .
-docker run --name lambda -w /var/task --volume $(shell pwd)/:/local -itd package:latest bash
-docker exec -it lambda bash '/local/layer.sh'
-docker stop lambda
-docker rm lambda
-
-```
-
 ### Docker environment variables
 A couple environment variables are set when creating the images:
 
